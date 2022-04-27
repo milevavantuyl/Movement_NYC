@@ -1,0 +1,2 @@
+uber_data_exploration.ipynb: Initial exploration, shows the schema for the Uber 2014 data vs. Uber 2015 data
+preprocessing_get_zones.ipynb: Pipeline/ notebook that converts lat/long points to zones using geopandas. This code is not scalable to all our records, so this must be reimplemented with pyspark.

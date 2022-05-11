@@ -13,6 +13,9 @@ import shapely
 #import geopandas as gpd
 from shapely.geometry import Polygon, LineString, Point
 
+# Converting Time Zone
+from pytz import timezone
+
 def c_to_f(x):
     return(x*1.8+32)
 
@@ -126,6 +129,7 @@ def get_data_simple(df_stations,startDate,endDate):
     return(df_weather_data)
 
 def get_expanded_data(df):
+    df = df.copy()
     #Input: Weather dataframe from get_data_simple
     #Output: Dataframe with the following columns:
 
@@ -138,9 +142,10 @@ def get_expanded_data(df):
     df['hot'] = df['heat_index'].map(lambda x:heat_advisory(x))
     df['cold'] = df['wind_chill'].map(lambda x:wind_chill_advisory(x))
     df['raining'] = df['prcp'].map(lambda x:is_raining(x))
+    
+    df['est'] = df['time'].map(lambda x:x.tz_localize(timezone('US/Eastern')))
 
-
-    return(df_weather_data)
+    return(df)
 
 startDate = datetime(2014, 2, 1, 1, 1)
 endDate = datetime(2014,2,28,23,59)

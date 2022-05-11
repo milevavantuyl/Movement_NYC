@@ -141,14 +141,14 @@ def get_expanded_data(df):
     df['cold'] = df['wind_chill'].map(lambda x:wind_chill_advisory(x))
     df['is_raining'] = df['prcp'].map(lambda x:is_raining(x))
     
-    #df['est'] = df['time'].map(lambda x:x.tz_localize(timezone('US/Eastern'),ambiguous=False))
+    df['time_in_est'] = df['time'].map(lambda x:x.tz_localize(timezone('US/Eastern'),ambiguous=False))
 
-    column_order = ['point','time','hot','cold','is_raining','temp','rhum','heat_index','wspd','wind_chill']
+    column_order = ['point','time_in_est','hot','cold','is_raining','time','temp','rhum','heat_index','wspd','wind_chill']
     df=df[column_order]
     return(df)
 
 startDate = datetime(2014, 4, 1, 0, 0)
-endDate = datetime(2015,6,30,23,59)
+endDate = datetime(2015,3,7,23,59)
 #endDate = datetime(2015, 6, 30, 23, 59)
 
 #x/y coord

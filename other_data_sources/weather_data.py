@@ -1,8 +1,6 @@
 # Imports
-
 import pandas as pd
 import numpy as np
-import matplotlib
 
 #Weather
 from meteostat import Stations, Daily,  units, Hourly #, Point
@@ -141,14 +139,16 @@ def get_expanded_data(df):
     df['wind_chill'] = df['wind_chill'].map(lambda x:wind_chill(x))
     df['hot'] = df['heat_index'].map(lambda x:heat_advisory(x))
     df['cold'] = df['wind_chill'].map(lambda x:wind_chill_advisory(x))
-    df['raining'] = df['prcp'].map(lambda x:is_raining(x))
+    df['is_raining'] = df['prcp'].map(lambda x:is_raining(x))
     
-    df['est'] = df['time'].map(lambda x:x.tz_localize(timezone('US/Eastern')))
+    #df['est'] = df['time'].map(lambda x:x.tz_localize(timezone('US/Eastern'),ambiguous=False))
 
+    column_order = ['point','time','hot','cold','is_raining','temp','rhum','heat_index','wspd','wind_chill']
+    df=df[column_order]
     return(df)
 
-startDate = datetime(2014, 2, 1, 1, 1)
-endDate = datetime(2014,2,28,23,59)
+startDate = datetime(2014, 4, 1, 0, 0)
+endDate = datetime(2015,6,30,23,59)
 #endDate = datetime(2015, 6, 30, 23, 59)
 
 #x/y coord
@@ -157,10 +157,12 @@ min_lon = -74.929
 max_lat = 41.3225
 max_lon = -71.1801
 
+print('start time',datetime.now())
 df_stations = get_weather_stations(min_lat,min_lon,max_lat,max_lon)
 df_weather_data = get_data_simple(df_stations,startDate,endDate)
 df_weather_expanded = get_expanded_data(df_weather_data)
-
+print('finish time',datetime.now())
+df_weather_expanded.to_csv('C:\\File\\Active_Dataset\\weather_data.csv')
 
 #Get weather stations within requested bounds
 

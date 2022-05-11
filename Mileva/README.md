@@ -1,2 +1,3 @@
-uber_data_exploration.ipynb: Initial exploration, shows the schema for the Uber 2014 data vs. Uber 2015 data
-preprocessing_get_zones.ipynb: Pipeline/ notebook that converts lat/long points to zones using geopandas. This code is not scalable to all our records, so this must be reimplemented with pyspark.
+00_uber_data_exploration.ipynb: Initial exploration, shows the schema for the Uber 2014 data vs. Uber 2015 data
+01_initial_processing_get_zones.ipynb: Pipeline that converts the lat/long points (as used in 2014 data) into locationIDs and zones (as used in the 2015 data). This code used geopandas and did not scale well to all our records. Thus, we used the qgis interface to do this transformation. 
+02_final_processing.ipynb: Pipeline that takes all the individual csvs generated from qgis and converts the 2014 and 2015 data into one single format/ schema. The output of this notebook is used for all future processing. 

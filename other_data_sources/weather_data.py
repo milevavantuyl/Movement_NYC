@@ -22,9 +22,10 @@ def kph_to_mph(x):
 def kph_to_mps(x):
     return(x/3.6)
 
-def heat_index(T,RH):
+def heat_index(x):
     #Useful ranges from https://www.weather.gov/safety/heat-index
-    if T<27 or RH<40:
+    T,RH=x
+    if (T<27.0) | (RH<40.0):
         return(T)
     T=c_to_f(T)
     
@@ -35,12 +36,12 @@ def heat_index(T,RH):
 def heat_advisory(hi):
     #For NY only. https://www.weather.gov/bgm/heat
     #Takes heat index as input.  Note that this requires a 2+ hour duration for an official announcement.
-    if hi > 95:
+    if hi >= 95:
         return(True)
     else:
         return(False)
 
-def wind_chill(T,wspd):
+def wind_chill(x):
     #Input: temperature in celsius, wspd in KPH
     #Output: Wind Chill
     
@@ -49,6 +50,7 @@ def wind_chill(T,wspd):
         #wc of 25 should be achieved at -2 degrees C, 5 KPH wind
         #This calculator sets wc of 25 at 0 degrees C, 5 KPH wind
     
+    T,wspd = x
     if T>10 or wspd<4.8:
         return(T)
     T=c_to_f(T)
@@ -59,7 +61,7 @@ def wind_chill(T,wspd):
 
 def wind_chill_advisory(wc):
     #National. From https://www.weather.gov/okx/wwa_definitions
-    if wc<-25:
+    if wc<=25:
         return(True)
     else:
         return(False)
@@ -67,8 +69,6 @@ def wind_chill_advisory(wc):
 def is_raining(x):
     #Input: hourly precipitation in mm.
     #Output: if precipitation greater than 0.
-    print('precipitation',x)
-    print(type(x))
     
     if np.isnan(x) or x==0:
         return(False)
@@ -125,15 +125,20 @@ def get_data_simple(df_stations,startDate,endDate):
 
     return(df_weather_data)
 
-def get_expanded_data(df_weather_data):
+def get_expanded_data(df):
     #Input: Weather dataframe from get_data_simple
     #Output: Dataframe with the following columns:
 
-    #df_weather_data["heat_index"] = df_weather_data[["temp", "rhum"]].apply(heat_index, axis=1) 
-    #df_weather_data["heat_advisory"] = df_weather_data[["heat_index"]].apply(heat_advisory, axis=1) 
-    #df_weather_data["wind_chill"] = df_weather_data[["temp", "wspd"]].apply(wind_chill, axis=1) 
-    #df_weather_data["wind_chill_advisory"] = df_weather_data[["wind_chill"]].apply(wind_chill_advisory, axis=1) 
-    df_weather_data["is_raining"] = df_weather_data[["prcp"]].apply(is_raining, axis=1) 
+    df['heat_index'] = list(zip(df.temp, df.rhum))
+    df['wind_chill'] = list(zip(df.temp, df.wspd))
+    df['is_raining'] = df.prcp
+    
+    df['heat_index'] = df['heat_index'].map(lambda x:heat_index(x))
+    df['wind_chill'] = df['wind_chill'].map(lambda x:wind_chill(x))
+    df['hot'] = df['heat_index'].map(lambda x:heat_advisory(x))
+    df['cold'] = df['wind_chill'].map(lambda x:wind_chill_advisory(x))
+    df['raining'] = df['prcp'].map(lambda x:is_raining(x))
+
 
     return(df_weather_data)
 

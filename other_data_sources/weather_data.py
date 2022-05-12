@@ -5,6 +5,7 @@ import numpy as np
 #Weather
 from meteostat import Stations, Daily,  units, Hourly #, Point
 from datetime import datetime
+import time
 
 # Geo processing
 import shapely
@@ -12,6 +13,7 @@ import shapely
 from shapely.geometry import Polygon, LineString, Point
 
 # Converting Time Zone
+import pytz
 from pytz import timezone
 
 def c_to_f(x):
@@ -26,9 +28,9 @@ def kph_to_mps(x):
 def heat_index(x):
     #Useful ranges from https://www.weather.gov/safety/heat-index
     T,RH=x
-    if (T<27.0) | (RH<40.0):
-        return(T)
     T=c_to_f(T)
+    if (T<80.0) | (RH<40.0):
+        return(T)
     
     #From https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
     HI = -42.379 + 2.04901523*T + 10.14333127*RH - .22475541*T*RH - .00683783*T*T - .05481717*RH*RH + .00122874*T*T*RH + .00085282*T*RH*RH - .00000199*T*T*RH*RH
@@ -36,8 +38,10 @@ def heat_index(x):
     
 def heat_advisory(hi):
     #For NY only. https://www.weather.gov/bgm/heat
-    #Takes heat index as input.  Note that this requires a 2+ hour duration for an official announcement.
-    if hi >= 95:
+    #Takes heat index as input.  
+        #Note that this requires a 2+ hour duration for an official announcement, and HI>95.  Reduced to 85, since we're trying to measure discomfort.
+    
+    if hi >= 85:
         return(True)
     else:
         return(False)
@@ -52,9 +56,9 @@ def wind_chill(x):
         #This calculator sets wc of 25 at 0 degrees C, 5 KPH wind
     
     T,wspd = x
-    if T>10 or wspd<4.8:
-        return(T)
     T=c_to_f(T)
+    if T>50 or wspd<4.8:
+        return(T)
     wspd=kph_to_mph(wspd)
     wspd=wspd**0.16
     wcf = 35.74+(.6215*T)-(35.75*wspd)+(.4275*T*wspd)
@@ -90,9 +94,11 @@ def get_weather_stations(min_lat,min_lon,max_lat,max_lon):
         #point:     object      lat/lng of station as object.
 
     #Retrieves a list of weather stations.(id,latitude,longitude)
-    df_stations = Stations().bounds((max_lat,min_lon),(min_lat,max_lon)).fetch()[['latitude','longitude']]        
+    df_stations = Stations().bounds((max_lat,min_lon),(min_lat,max_lon)).fetch()
+    df_stations = df_stations[df_stations['region']=='NY']
+    df_stations = df_stations[['latitude','longitude']]        
     #Point function from shapely package.
-    df_stations["point"] = df_stations[["longitude", "latitude"]].apply(Point, axis=1) 
+    #df_stations["point"] = df_stations[["longitude", "latitude"]].apply(Point, axis=1) 
     ###FUNCTION TO GET TAXI ZONES GOES HERE###
 
 
@@ -141,45 +147,74 @@ def get_expanded_data(df):
     df['cold'] = df['wind_chill'].map(lambda x:wind_chill_advisory(x))
     df['is_raining'] = df['prcp'].map(lambda x:is_raining(x))
     
+    df=df[df.time!='2015-03-08 02:00:00'] #Hooray for daylight savings time.
+    
     df['time_in_est'] = df['time'].map(lambda x:x.tz_localize(timezone('US/Eastern'),ambiguous=False))
 
-    column_order = ['point','time_in_est','hot','cold','is_raining','time','temp','rhum','heat_index','wspd','wind_chill']
-    df=df[column_order]
+    column_order = ['time_in_est','hot','cold','is_raining','time','temp','rhum','wspd','prcp','heat_index','wind_chill']
+    df = df[column_order]
+    df = df.rename(columns={'time':'time_in_utc'})
     return(df)
 
-startDate = datetime(2014, 4, 1, 0, 0)
-endDate = datetime(2015,3,7,23,59)
-#endDate = datetime(2015, 6, 30, 23, 59)
+def hourly_to_daily(df_weather_hourly):
+    df=df_weather_hourly.copy()
+    df[['hot','cold','is_raining']]=df[['hot','cold','is_raining']].astype(int)
+    df['date']=df['time_in_est'].dt.date
+    df=df[['date','hot','cold','is_raining']]
+    df = df.groupby(by='date',dropna=False).sum().reset_index()
+    df['hot'] = df['hot'].map(lambda x:x>1)
+    df['cold'] = df['cold'].map(lambda x:x>1)
+    df['is_raining'] = df['is_raining'].map(lambda x:x>1)
+    return(df)
 
-#x/y coord
-min_lat = 40.1067
-min_lon = -74.929
-max_lat = 41.3225
-max_lon = -71.1801
-
-print('start time',datetime.now())
-df_stations = get_weather_stations(min_lat,min_lon,max_lat,max_lon)
-df_weather_data = get_data_simple(df_stations,startDate,endDate)
-df_weather_expanded = get_expanded_data(df_weather_data)
-print('finish time',datetime.now())
-df_weather_expanded.to_csv('C:\\File\\Active_Dataset\\weather_data.csv')
-
-#Get weather stations within requested bounds
-
-
-#Get corresponding locationID for each weather station.  
-#Dataset contains <100 weather stations, so if we determine zone before matching with hourly data, this should scale fine.
-#df_stations['locationID'] = df_stations['point'].apply(lambda x: coord_to_zone(x))
-
-#Get relevent weather data
-#.drop(['dwpt','wdir','wpgt','pres','coco','snow','tsun'],axis=1)
-
-#Merge Datasets
-#weather data has a multi-level index.  Reset so we don't have to deal with it.
-
-
-#Insert discomfort indecies here
-    #Windchill
-    #Heat Equivalent
+def worst_three_days(df_weather_hourly):
+    df=df_weather_hourly.copy()
+    df['date']=df['time_in_est'].dt.date
+    df = df.groupby(by='date',dropna=False).sum().reset_index()
     
-#Group by locationID
+    df_hottest = df[df.temp==df.temp.max()]
+    df_coldest = df[df.temp==df.temp.min()]
+    df_rainiest = df[df.prcp==df.prcp.max()]
+    df_worst_days = pd.concat([df_hottest,df_coldest,df_rainiest])
+    for i in ['temp','rhum','wspd','prcp','heat_index','wind_chill']:
+        df_worst_days[i] = df_worst_days[i].map(lambda x:x/24)
+    
+    #df_worst_days.temp = df_worst_days.temp.map(lambda x:c_to_f(x))
+    #df_worst_days.wspd = df_worst_days.wspd.map(lambda x:kph_to_mph(x))
+    return(df_worst_days)
+
+############
+#Driver Code
+############
+
+#startDate = datetime(2014, 4, 1, 0, 0)
+#endDate = datetime(2015,3,8,1,0) #Should be june 30 2015, currently having issues with DST on 3/8 2:00 AM
+startDate = datetime(2014, 4, 1, 1, 0)
+endDate = datetime(2015,6,30,23,59) 
+
+#Full Dataset x/y coord limits
+min_lat = 39.9897
+min_lon = -74.929
+max_lat = 41.3476
+max_lon = -72.7163
+
+
+df_stations = get_weather_stations(min_lat,min_lon,max_lat,max_lon)
+#df_stations.to_csv('C:\\File\\Active_Dataset\\weather_stations.csv')
+
+#Retrieve weather data
+df_weather_data = get_data_simple(df_stations,startDate,endDate)
+#Average all stations
+df_weather_data_average = df_weather_data.groupby(by="time", dropna=False).mean().reset_index()
+
+df_weather_hourly = get_expanded_data(df_weather_data_average)
+df_weather_hourly.to_csv('C:\\File\\Active_Dataset\\weather_data_hourly.csv')
+
+df_weather_daily = hourly_to_daily(df_weather_hourly)
+df_weather_daily.to_csv('C:\\File\\Active_Dataset\\weather_data_daily.csv')
+
+df_worst_days = worst_three_days(df_weather_hourly)
+df_worst_days.to_csv('C:\\File\\Active_Dataset\\weather_data_worst_days.csv')
+
+
+

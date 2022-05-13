@@ -3,7 +3,16 @@
 Repository Contents: 
 
 NYC Uber Trips.pptx: PowerPoint Presentation. 
-
+/Melanie Time Series Analysis
+- Hourly and Daily Changes of Uber Traffic Data.ipynb: Visualizations of the changes by day and by hour
+- Analyzing Weekends vs Weekdays.ipynb: Same as above, but generalized to weekends instead of weekdays
+- Analyzing_Weekends_versus_Weekdays_GoogleColab_Scaled.ipynb: some minor corrections to weekends plots with scaling
+  - /August2014Pandas: smaller examples of the data analysis using Pandas
+    - Peaks in Time By Day August 2014.ipynb: visualization using Pandas on a smaller scale for days
+    - Peaks in Time By Hour August 2014.ipynb: visualizations of August 2014's differences by hour
+  - /Templates: smaller example of Reading in all the 2014 data.
+    - Reading in All the Days: the notebook corresponding to this.
+    
 /mileva    
 - 00_uber_data_exploration.ipynb: Initial exploration with PySpark, shows the schema for the Uber 2014 data vs. Uber 2015 data.   
 - 01_initial_processing_get_zones.ipynb: Converts lat/long coordinates (used in 2014 data) into locationIDs (used in 2015 data). Richard completed this transformation in QGIS as the code scaled poorly to the entire dataset.   

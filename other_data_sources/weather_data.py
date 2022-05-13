@@ -1,3 +1,6 @@
+#by Thomas FitzGerald (thomas.fitzgerald23@ncf.edu)
+
+
 # Imports
 import pandas as pd
 import numpy as np
@@ -39,8 +42,8 @@ def heat_index(x):
 def heat_advisory(hi):
     #For NY only. https://www.weather.gov/bgm/heat
     #Takes heat index as input.  
-        #Note that this requires a 2+ hour duration for an official announcement, and HI>95.  Reduced to 85, since we're trying to measure discomfort.
-    
+        #Note that this requires a 2+ hour duration for an official announcement, and HI>95.  
+        #Reduced to 85, since we're trying to measure discomfort, and NYC did not have sufficient temperature for an actual heat advisory in summer 2014.
     if hi >= 85:
         return(True)
     else:
@@ -82,7 +85,6 @@ def is_raining(x):
                 
 
 def get_weather_stations(min_lat,min_lon,max_lat,max_lon):
-    ###NEEDS FUNCTION TO GET TAXI ZONES###
     #Gets a dataframe of weather stations in a grid based on min/max latitude/longitude values.
     
     #Input: min and max latitude/longitude
@@ -95,12 +97,12 @@ def get_weather_stations(min_lat,min_lon,max_lat,max_lon):
 
     #Retrieves a list of weather stations.(id,latitude,longitude)
     df_stations = Stations().bounds((max_lat,min_lon),(min_lat,max_lon)).fetch()
-    df_stations = df_stations[df_stations['region']=='NY']
+    #NY only
+    df_stations = df_stations[df_stations['region']=='NY']    
     df_stations = df_stations[['latitude','longitude']]        
     #Point function from shapely package.
     #df_stations["point"] = df_stations[["longitude", "latitude"]].apply(Point, axis=1) 
-    ###FUNCTION TO GET TAXI ZONES GOES HERE###
-
+    #Note: taxi zones/points did not end up being relevant.  If they were added, location_id function should go here.
 
     return(df_stations)
 
@@ -200,10 +202,11 @@ max_lon = -72.7163
 
 
 df_stations = get_weather_stations(min_lat,min_lon,max_lat,max_lon)
-#df_stations.to_csv('C:\\File\\Active_Dataset\\weather_stations.csv')
+df_stations.to_csv('C:\\File\\Active_Dataset\\weather_stations.csv')
 
 #Retrieve weather data
 df_weather_data = get_data_simple(df_stations,startDate,endDate)
+df_weather_data.to_csv('C:\\File\\Active_Dataset\\weather_data_hourly_raw.csv')
 #Average all stations
 df_weather_data_average = df_weather_data.groupby(by="time", dropna=False).mean().reset_index()
 

@@ -2,7 +2,8 @@
 
 Repository Contents: 
 
-NYC Uber Trips.pptx: PowerPoint Presentation. 
+NYC Uber Trips.pptx: PowerPoint Presentation.  
+
 /Melanie Time Series Analysis
 - Hourly and Daily Changes of Uber Traffic Data.ipynb: Visualizations of the changes by day and by hour
 - Analyzing Weekends vs Weekdays.ipynb: Same as above, but generalized to weekends instead of weekdays

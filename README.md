@@ -19,3 +19,14 @@ NYC Uber Trips.pptx: PowerPoint Presentation.
 /richard
 - QGIS_processing.ipynb: Processes raw input data to output summation of rides from each taxi zone for every month in the data set corrected for overall growth in Uber ridership for the 14 month period of the data set.  The data format is then suitable for joining onto QGIS polygon shapes representing taxi zones throughout the five New York boroughs.  The final output produces choropleths demonstrating shifting monthly trends in ridership concentration.
 
+/other_data_sources (Thomas)
+weather_data.py: Generates .csv files using the meteostat library.
+It contains the following:
+
+* A number of small functions (c_to_f down to is_raining) that convert units and calculate measures.
+* get_weather_stations: retrieves a list of weather stations from meteostat, based on a set of lat/lon coordinates.
+* get_data_simple: Retrieves temperature, humidity, precipitation, and windspeed for a list of weather stations.
+* get_data_expanded: This adds all the subjective comfort measures we used (heat index, wind chill, rain), as well as converting from UTC to US/Eastern.
+* hourly_to_daily: aggregates from hourly to daily
+* worst_three_days: returns the hottest, coldest, and rainiest days of the year.  precipitation numbers DO NOT aggregate correctly, so we used individual station numbers once we found the day.
+* driver code: Runs the above and returns .csv's.  Only addition is a groupby to average all station results; this was a late addition.

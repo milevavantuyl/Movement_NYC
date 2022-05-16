@@ -29,6 +29,11 @@ NYC Uber Trips.pptx: PowerPoint Presentation.
 /richard
 - QGIS_processing.ipynb: Processes raw input data to output summation of rides from each taxi zone for every month in the data set corrected for overall growth in Uber ridership for the 14 month period of the data set.  The data format is then suitable for joining onto QGIS polygon shapes representing taxi zones throughout the five New York boroughs.  The final output produces choropleths demonstrating shifting monthly trends in ridership concentration.
 
+/kyle 
+- data_cleaning.ipynb : My attempt to clean the data to be able to join 2014 and 2015 data together.
+- holidays.ipynb : Looking at holidays and their trends +- a day.
+- weather_worst_days.ipynb : looking at the hottest and the coldest days in our data set to see if there were significant changes in trend.
+
 /other_data_sources (Thomas)
 weather_data.py: Generates .csv files using the meteostat library.
 It contains the following:
@@ -40,3 +45,4 @@ It contains the following:
 * hourly_to_daily: aggregates from hourly to daily
 * worst_three_days: returns the hottest, coldest, and rainiest days of the year.  precipitation numbers DO NOT aggregate correctly, so we used individual station numbers once we found the day.
 * driver code: Runs the above and returns .csv's.  Only addition is a groupby to average all station results; this was a late addition.
+*

@@ -1,4 +1,4 @@
-# Movement_NYC
+# NYC Mobility Patterns
 
 Repository Contents: 
 
